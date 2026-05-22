@@ -1,2 +1,1 @@
-JINWOO LOVES SHADOW
- 
+News Aggregator Web App
