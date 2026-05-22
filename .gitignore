@@ -1,0 +1,11 @@
+# This will catch node_modules anywhere in the project (both frontend and backend)
+node_modules/
+.next/
+out/
+build/
+.env*
+
+# These apply globally anyway
+.DS_Store
+*.pem
+*.tsbuildinfo
