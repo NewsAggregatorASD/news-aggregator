@@ -1,0 +1,326 @@
+import bcrypt from "bcryptjs";
+import User from "../models/User.js";
+import generateToken from "../utils/generateToken.js";
+import jwt from "jsonwebtoken";
+import crypto from "crypto";
+import sendEmail from "../utils/sendEmail.js";
+
+// REGISTER
+export const registerUser = async (req, res) => {
+  try {
+    const verificationToken =
+      crypto.randomBytes(32).toString("hex");
+    const { username, email, password } = req.body;
+
+    const existingUser = await User.findOne({
+      $or: [{ email }, { username }],
+    });
+
+    if (existingUser) {
+      return res.status(400).json({
+        message: "User already exists",
+      });
+    }
+
+    const salt = await bcrypt.genSalt(10);
+
+    const hashedPassword = await bcrypt.hash(
+      password,
+      salt
+    );
+
+    const user = await User.create({
+      username,
+      email,
+      password: hashedPassword,
+      verificationToken,
+    });
+
+    res.status(201).json({
+      _id: user._id,
+      username: user.username,
+      email: user.email,
+      token: generateToken(user._id),
+    });
+
+    const verificationUrl =
+      `http://localhost:3000/verify-email/${verificationToken}`;
+
+    await sendEmail(
+      user.email,
+
+      "Verify Your Account",
+
+      `
+    <h2>Email Verification</h2>
+
+    <p>Click below to verify your account:</p>
+
+    <a href="${verificationUrl}">
+      Verify Email
+    </a>
+  `
+    );
+  } catch (error) {
+    res.status(500).json({
+      message: error.message,
+    });
+  }
+};
+
+// LOGIN
+export const loginUser = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return res.status(401).json({
+        message: "Invalid credentials",
+      });
+    }
+
+    const isMatch = await bcrypt.compare(
+      password,
+      user.password
+    );
+
+    if (!isMatch) {
+      return res.status(401).json({
+        message: "Invalid credentials",
+      });
+    }
+
+    /*
+    if (!user.isVerified) {
+      return res.status(401).json({
+        message:
+          "Please verify your email first",
+      });
+    }
+    */
+
+    // TOKENS
+    const accessToken = generateAccessToken(
+      user._id
+    );
+
+    const refreshToken = generateRefreshToken(
+      user._id
+    );
+
+    // STORE REFRESH TOKEN IN COOKIE
+    res.cookie("refreshToken", refreshToken, {
+      httpOnly: true,
+      secure: false, // true in production
+      sameSite: "strict",
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
+
+    res.json({
+      _id: user._id,
+      username: user.username,
+      email: user.email,
+      accessToken,
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: error.message,
+    });
+  }
+};
+
+export const refreshAccessToken = async (
+  req,
+  res
+) => {
+  try {
+    const token = req.cookies.refreshToken;
+
+    if (!token) {
+      return res.status(401).json({
+        message: "No refresh token",
+      });
+    }
+
+    const decoded = jwt.verify(
+      token,
+      process.env.JWT_REFRESH_SECRET
+    );
+
+    const accessToken =
+      generateAccessToken(decoded.id);
+
+    res.json({
+      accessToken,
+    });
+  } catch (error) {
+    res.status(401).json({
+      message: "Invalid refresh token",
+    });
+  }
+};
+
+export const logoutUser = (req, res) => {
+  res.cookie("refreshToken", "", {
+    httpOnly: true,
+    expires: new Date(0),
+  });
+
+  res.json({
+    message: "Logged out successfully",
+  });
+};
+
+export const getMe = async (req, res) => {
+  try {
+    res.json(req.user);
+  } catch (error) {
+    res.status(500).json({
+      message: error.message,
+    });
+  }
+};
+
+export const verifyEmail = async (
+  req,
+  res
+) => {
+  try {
+    const { token } = req.params;
+
+    const user = await User.findOne({
+      verificationToken: token,
+    });
+
+    if (!user) {
+      return res.status(400).json({
+        message: "Invalid token",
+      });
+    }
+
+    user.isVerified = true;
+
+    user.verificationToken = undefined;
+
+    await user.save();
+
+    res.json({
+      message:
+        "Email verified successfully",
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: error.message,
+    });
+  }
+};
+
+export const forgotPassword = async (
+  req,
+  res
+) => {
+  try {
+    const { email } = req.body;
+
+    const user = await User.findOne({
+      email,
+    });
+
+    if (!user) {
+      return res.status(404).json({
+        message: "User not found",
+      });
+    }
+
+    const resetToken =
+      crypto.randomBytes(32).toString("hex");
+
+    user.resetPasswordToken =
+      resetToken;
+
+    user.resetPasswordExpires =
+      Date.now() + 1000 * 60 * 15;
+
+    await user.save();
+
+    const resetUrl =
+      `http://localhost:3000/reset-password/${resetToken}`;
+
+    await sendEmail(
+      user.email,
+
+      "Password Reset",
+
+      `
+        <h2>Password Reset</h2>
+
+        <p>Click below to reset password:</p>
+
+        <a href="${resetUrl}">
+          Reset Password
+        </a>
+      `
+    );
+
+    res.json({
+      message:
+        "Password reset email sent",
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: error.message,
+    });
+  }
+};
+
+export const resetPassword = async (
+  req,
+  res
+) => {
+  try {
+    const { token } = req.params;
+
+    const { password } = req.body;
+
+    const user = await User.findOne({
+      resetPasswordToken: token,
+
+      resetPasswordExpires: {
+        $gt: Date.now(),
+      },
+    });
+
+    if (!user) {
+      return res.status(400).json({
+        message:
+          "Invalid or expired token",
+      });
+    }
+
+    const salt = await bcrypt.genSalt(10);
+
+    user.password = await bcrypt.hash(
+      password,
+      salt
+    );
+
+    user.resetPasswordToken =
+      undefined;
+
+    user.resetPasswordExpires =
+      undefined;
+
+    await user.save();
+
+    res.json({
+      message:
+        "Password reset successful",
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: error.message,
+    });
+  }
+};
