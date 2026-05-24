@@ -28,10 +28,12 @@ const userSchema = new mongoose.Schema(
       default: [],
     },
 
-    bookmarkedArticles: {
-      type: [String],
-      default: [],
-    },
+    bookmarkedArticles: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Article",
+      },
+    ],
 
     role: {
       type: String,
@@ -58,10 +60,26 @@ const userSchema = new mongoose.Schema(
     resetPasswordExpires: {
       type: Date,
     },
+    readingHistory: [
+      {
+        article: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "Article",
+        },
+
+        category: String,
+
+        viewedAt: {
+          type: Date,
+          default: Date.now,
+        },
+      },
+    ],
   },
   {
     timestamps: true,
-  }
+  },
+
 );
 
 const User = mongoose.model("User", userSchema);
