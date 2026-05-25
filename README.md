@@ -1,1 +1,1 @@
-News Aggregator Web App
+News Aggregator App
