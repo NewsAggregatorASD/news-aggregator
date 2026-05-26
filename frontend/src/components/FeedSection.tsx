@@ -28,7 +28,7 @@ const FeedSection = ({
       {/* HEADER */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight text-black">
+          <h2 className="text-3xl font-bold tracking-tight text-white">
             {title}
           </h2>
 
@@ -38,11 +38,7 @@ const FeedSection = ({
           </p>
         </div>
 
-        <button className="hidden md:flex items-center gap-2 text-zinc-400 hover:text-white transition-colors">
-          View All
 
-          <ChevronRight className="w-4 h-4" />
-        </button>
       </div>
 
       {/* HORIZONTAL SCROLL */}
