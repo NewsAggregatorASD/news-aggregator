@@ -24,71 +24,94 @@ export const getArticles = async (
 
 // GET SINGLE ARTICLE
 export const getArticleById =
-  async (req, res) => {
-    try {
-      const article =
-        await Article.findById(
-          req.params.id
-        );
-
-      if (!article) {
-        return res.status(404).json({
-          message: "Article not found",
-        });
-      }
-
-      // engagement tracking
-      article.views += 1;
-
-      article.clicks += 1;
-
-      // extract full content only once
-      if (
-        !article.contentExtracted
-      ) {
+    async (req, res) => {
         try {
-          console.log(
-            `Extracting content for ${article.url}`
-          );
+            const article =
+                await Article.findById(
+                    req.params.id
+                );
 
-          const extracted =
-            await extract(
-              article.url
-            );
+            if (!article) {
+                return res.status(404).json({
+                    message:
+                        "Article not found",
+                });
+            }
 
-          if (
-            extracted?.content
-          ) {
-            article.fullContent =
-              extracted.content;
+            // engagement tracking
+            article.views += 1;
 
-            article.contentExtracted =
-              true;
-          }
+            article.clicks += 1;
+
+            // extract full content only once
+            if (
+                !article.contentExtracted
+            ) {
+                try {
+                    console.log(
+                        `Extracting content for ${article.url}`
+                    );
+
+                    const extracted =
+                        await extract(
+                            article.url
+                        );
+
+                    if (
+                        extracted?.content
+                    ) {
+                        article.fullContent =
+                            extracted.content;
+
+                        article.contentExtracted =
+                            true;
+                    }
+                } catch (error) {
+                    console.log(
+                        "Extraction failed"
+                    );
+                }
+            }
+
+            // RELATED ARTICLES
+            const relatedArticles =
+                await Article.find({
+                    _id: {
+                        $ne: article._id,
+                    },
+
+                    category:
+                        article.category,
+                })
+                    .sort({
+                        trendingScore: -1,
+                    })
+                    .limit(6);
+
+            await article.save();
+
+            // recommendation tracking
+            if (req.user) {
+                await trackReadingHistory(
+                    req.user._id,
+                    article._id
+                );
+            }
+
+            res.json({
+                article,
+
+                relatedArticles,
+            });
         } catch (error) {
-          console.log(
-            "Extraction failed"
-          );
+            console.error(error);
+
+            res.status(500).json({
+                message:
+                    error.message,
+            });
         }
-      }
-
-      await article.save();
-
-      // recommendation tracking
-      if (req.user) {
-        await trackReadingHistory(
-          req.user._id,
-          article._id
-        );
-      }
-
-      res.json(article);
-    } catch (error) {
-      res.status(500).json({
-        message: error.message,
-      });
-    }
-  };
+    };
 
 export const getArticlesByCategory =
     async (req, res) => {

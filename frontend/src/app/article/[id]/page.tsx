@@ -5,14 +5,23 @@ import BookmarkButton from "@/components/BookmarkButton";
 import api from "@/services/api";
 import ArticleSkeleton from "@/components/ArticleSkeleton";
 import { toast } from "react-hot-toast/headless";
+import RelatedArticles from "@/components/RelatedArticles";
 const ArticlePage = () => {
     const params = useParams();
     const [article, setArticle] = useState<any>(null);
+    const [relatedArticles, setRelatedArticles] = useState([]);
+
     useEffect(() => {
         const fetchArticle = async () => {
             try {
                 const response = await api.get(`/articles/${params.id}`);
-                setArticle(response.data);
+                setArticle(
+                    response.data.article
+                );
+
+                setRelatedArticles(
+                    response.data.relatedArticles
+                );
             }
             catch (error) {
                 toast.error("Failed to fetch article");
@@ -124,6 +133,12 @@ const ArticlePage = () => {
                     }}
                 />
             </main>
+            <section className="max-w-7xl mx-auto px-6 pb-20">
+                <RelatedArticles
+                articles={relatedArticles}
+            />
+            </section>
+            
         </div>
     );
 };
