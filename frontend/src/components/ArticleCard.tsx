@@ -20,11 +20,11 @@ const ArticleCard = ({
   return (
     <Link
       href={`/article/${article._id}`}
-      className="group"
+      className="group block h-full"
     >
-      <article className="news-card h-full flex flex-col">
+      <article className="news-card h-full flex flex-col overflow-hidden">
         {/* IMAGE */}
-        <div className="relative overflow-hidden h-56">
+        <div className="relative overflow-hidden h-44 sm:h-52 md:h-56">
           {article.imageUrl ? (
             <img
               src={article.imageUrl}
@@ -34,9 +34,9 @@ const ArticleCard = ({
           ) : (
             <div className="w-full h-full bg-linear-to-br from-blue-500/20 via-zinc-900 to-black flex items-center justify-center">
               <div className="text-center">
-                <TrendingUp className="w-10 h-10 text-blue-400 mx-auto mb-3" />
+                <TrendingUp className="w-8 h-8 md:w-10 md:h-10 text-blue-400 mx-auto mb-2 md:mb-3" />
 
-                <p className="text-zinc-400 text-sm">
+                <p className="text-zinc-400 text-xs md:text-sm">
                   News Aggregator
                 </p>
               </div>
@@ -46,23 +46,23 @@ const ArticleCard = ({
           {/* OVERLAY */}
           <div className="absolute inset-0 bg-linear-to-t from-black/80 to-transparent opacity-80" />
 
-          {/* CATEGORY BADGE */}
-          <div className="absolute top-4 left-4">
-            <span className="px-3 py-1 rounded-full bg-black/60 backdrop-blur-md border border-white/10 text-xs font-medium text-white capitalize">
+          {/* CATEGORY */}
+          <div className="absolute top-3 left-3 md:top-4 md:left-4">
+            <span className="px-2.5 py-1 md:px-3 md:py-1 rounded-full bg-black/60 backdrop-blur-md border border-white/10 text-[10px] md:text-xs font-medium text-white capitalize">
               {article.category}
             </span>
           </div>
         </div>
 
         {/* CONTENT */}
-        <div className="flex flex-col flex-1 p-5">
-          {/* SOURCE */}
-          <div className="flex items-center justify-between mb-4">
-            <span className="text-sm text-blue-400 font-medium">
+        <div className="flex flex-col flex-1 p-4 md:p-5">
+          {/* TOP META */}
+          <div className="flex items-center justify-between mb-3 md:mb-4 gap-3">
+            <span className="text-xs md:text-sm text-blue-400 font-medium truncate">
               {article.source}
             </span>
 
-            <div className="flex items-center gap-1 text-zinc-500 text-xs">
+            <div className="flex items-center gap-1 text-zinc-500 text-[10px] md:text-xs shrink-0">
               <Clock3 className="w-3 h-3" />
 
               {new Date(
@@ -72,18 +72,18 @@ const ArticleCard = ({
           </div>
 
           {/* TITLE */}
-          <h2 className="text-xl font-semibold leading-tight text-white mb-4 line-clamp-2 group-hover:text-blue-400 transition-colors">
+          <h2 className="text-lg md:text-xl font-semibold leading-snug text-white mb-3 md:mb-4 line-clamp-2 group-hover:text-blue-400 transition-colors">
             {article.title}
           </h2>
 
           {/* DESCRIPTION */}
-          <p className="text-zinc-400 text-sm leading-7 line-clamp-3 flex-1">
+          <p className="text-zinc-400 text-sm leading-6 md:leading-7 line-clamp-3 flex-1">
             {article.description}
           </p>
 
           {/* FOOTER */}
-          <div className="mt-6 pt-4 border-t border-zinc-800 flex items-center justify-between">
-            <span className="text-xs text-zinc-500">
+          <div className="mt-5 pt-4 border-t border-zinc-800 flex items-center justify-between">
+            <span className="text-[11px] md:text-xs text-zinc-500">
               Trending Score
             </span>
 

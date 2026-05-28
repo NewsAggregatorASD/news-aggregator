@@ -1,7 +1,6 @@
 "use client";
 
-import { ChevronRight }
-from "lucide-react";
+
 
 import ArticleCard
 from "./ArticleCard";
@@ -24,29 +23,37 @@ const FeedSection = ({
   }
 
   return (
-    <section className="mb-16 fade-in">
+    <section className="mb-14 md:mb-20 fade-in">
       {/* HEADER */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-end justify-between mb-5 md:mb-7">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight text-white">
+          <h2 className="text-2xl md:text-3xl font-bold tracking-tight text-white">
             {title}
           </h2>
 
-          <p className="text-zinc-500 mt-1">
+          <p className="text-sm md:text-base text-zinc-500 mt-1">
             Curated stories updated
             continuously
           </p>
         </div>
 
-
       </div>
 
-      {/* HORIZONTAL SCROLL */}
-      <div className="flex gap-6 overflow-x-auto scrollbar-hide pb-2">
+      {/* SCROLL CONTAINER */}
+      <div className="flex gap-4 md:gap-6 overflow-x-auto scrollbar-hide pb-2 snap-x snap-mandatory">
         {articles.map((article) => (
           <div
             key={article._id}
-            className="min-w-[320px] max-w-[320px] shrink-0"
+            className="
+              min-w-70
+              sm:min-w-[320px]
+              md:min-w-85
+              max-w-70
+              sm:max-w-[320px]
+              md:max-w-85
+              shrink-0
+              snap-start
+            "
           >
             <ArticleCard
               article={article}
