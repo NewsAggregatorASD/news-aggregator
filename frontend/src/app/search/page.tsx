@@ -1,157 +1,128 @@
 "use client";
-
 import { useEffect, useState } from "react";
-
 import api from "@/services/api";
-
 import Navbar from "@/components/Navbar";
+import FeedSection from "@/components/FeedSection";
+import { Search } from "lucide-react";
 
-import FeedSection
-    from "@/components/FeedSection";
+const categories = [
+  { label: "🌐 All", value: "" },
+  { label: "💻 Tech", value: "technology" },
+  { label: "⚽ Sports", value: "sports" },
+  { label: "📈 Business", value: "business" },
+  { label: "🏥 Health", value: "health" },
+  { label: "🔬 Science", value: "science" },
+  { label: "🎬 Entertainment", value: "entertainment" },
+];
 
 const SearchPage = () => {
-    const [query, setQuery] =
-        useState("");
+  const [query, setQuery] = useState("");
+  const [category, setCategory] = useState("");
+  const [articles, setArticles] = useState([]);
+  const [loading, setLoading] = useState(false);
 
-    const [category, setCategory] =
-        useState("");
+  const searchArticles = async () => {
+    try {
+      setLoading(true);
+      const response = await api.get("/articles/search", {
+        params: { q: query, category },
+      });
+      setArticles(response.data);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    const [articles, setArticles] =
-        useState([]);
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (query.trim() || category) {
+        searchArticles();
+      } else {
+        setArticles([]);
+      }
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [query, category]);
 
-    const [loading, setLoading] =
-        useState(false);
+  return (
+    <div className="bg-black min-h-screen text-white">
+      <Navbar />
 
-    const searchArticles =
-        async () => {
-            try {
-                setLoading(true);
+      <div className="max-w-7xl mx-auto p-6">
 
-                const response =
-                    await api.get(
-                        "/articles/search",
-                        {
-                            params: {
-                                q: query,
-                                category,
-                            },
-                        }
-                    );
+        {/* HEADER */}
+        <h1 className="text-4xl font-bold mb-1">Search Articles</h1>
+        <p className="text-zinc-500 mb-8">Find stories across thousands of sources</p>
 
-                setArticles(response.data);
-            } catch (error) {
-                console.error(error);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-    useEffect(() => {
-        const timer = setTimeout(() => {
-            if (
-                query.trim() ||
-                category
-            ) {
-                searchArticles();
-            }
-        }, 500);
-
-        return () => clearTimeout(timer);
-    }, [query, category]);
-
-    return (
-        <div className="bg-gray-100 min-h-screen">
-            <Navbar />
-
-            <div className="max-w-7xl mx-auto p-6">
-                <h1 className="text-4xl font-bold mb-8">
-                    Search Articles
-                </h1>
-
-                {/* Search Controls */}
-                <div className="flex flex-col md:flex-row gap-4 mb-8">
-                    <input
-                        type="text"
-                        placeholder="Search articles..."
-                        value={query}
-                        onChange={(e) =>
-                            setQuery(e.target.value)
-                        }
-                        className="flex-1 border p-4 rounded-lg"
-                    />
-
-                    <select
-                        value={category}
-                        onChange={(e) =>
-                            setCategory(
-                                e.target.value
-                            )
-                        }
-                        className="border p-4 rounded-lg"
-                    >
-                        <option value="">
-                            All Categories
-                        </option>
-
-                        <option value="technology">
-                            Technology
-                        </option>
-
-                        <option value="sports">
-                            Sports
-                        </option>
-
-                        <option value="business">
-                            Business
-                        </option>
-
-                        <option value="health">
-                            Health
-                        </option>
-
-                        <option value="science">
-                            Science
-                        </option>
-
-                        <option value="entertainment">
-                            Entertainment
-                        </option>
-                    </select>
-                </div>
-
-                {/* Loading */}
-                {loading && (
-                    <div className="text-center py-10">
-                        Searching...
-                    </div>
-                )}
-
-                {/* Results */}
-                {!loading &&
-                    articles.length > 0 && (
-                        <FeedSection
-                            title="Search Results"
-                            articles={articles}
-                        />
-                    )}
-
-                {/* Empty State */}
-                {!loading &&
-                    articles.length === 0 &&
-                    (query || category) && (
-                        <div className="text-center py-20">
-                            <h2 className="text-2xl font-semibold mb-3">
-                                No Articles Found
-                            </h2>
-
-                            <p className="text-gray-500">
-                                Try another search term or category.
-                            </p>
-                        </div>
-                    )}
-            </div>
+        {/* SEARCH INPUT */}
+        <div className="relative mb-6">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-500" />
+          <input
+            type="text"
+            placeholder="Search articles..."
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            className="w-full bg-zinc-900 text-white border border-zinc-700 pl-12 pr-4 py-4 rounded-xl focus:outline-none focus:border-blue-500 transition-colors"
+          />
         </div>
-    );
+
+        {/* CATEGORY PILLS */}
+        <div className="flex flex-wrap gap-2 mb-8">
+          {categories.map((cat) => (
+            <button
+              key={cat.value}
+              onClick={() => setCategory(cat.value)}
+              className={`px-4 py-2 rounded-full text-sm font-medium transition-all
+                ${category === cat.value
+                  ? "bg-white text-black scale-105"
+                  : "bg-zinc-800 text-zinc-300 hover:bg-zinc-700"
+                }`}
+            >
+              {cat.label}
+            </button>
+          ))}
+        </div>
+
+        {/* LOADING */}
+        {loading && (
+          <div className="text-center py-16 text-zinc-500 animate-pulse">
+            Searching...
+          </div>
+        )}
+
+        {/* RESULT COUNT */}
+        {!loading && articles.length > 0 && (
+          <p className="text-zinc-500 text-sm mb-4">
+            {articles.length} results {query && `for "${query}"`}
+          </p>
+        )}
+
+        {/* RESULTS */}
+        {!loading && articles.length > 0 && (
+          <FeedSection title="Results" articles={articles} />
+        )}
+
+        {/* NO RESULTS */}
+        {!loading && articles.length === 0 && (query || category) && (
+          <div className="text-center py-24">
+            <p className="text-5xl mb-4">🔍</p>
+            <h2 className="text-2xl font-semibold mb-2">No results found</h2>
+            <p className="text-zinc-500">Try a different keyword or category</p>
+          </div>
+        )}
+
+        {/* DEFAULT STATE */}
+        {!loading && !query && !category && (
+          <div className="text-center py-24">
+            <p className="text-5xl mb-4">📰</p>
+            <p className="text-zinc-500 text-lg">Start typing to discover articles</p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
 };
 
 export default SearchPage;
