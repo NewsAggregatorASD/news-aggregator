@@ -24,29 +24,6 @@ import homeRoutes from "./routes/homeRoutes.js";
 
 const PORT = process.env.PORT || 5000;
 
-const startServer = async () => {
-  try {
-    await connectDB();
-
-    await fetchNews();
-
-    await fetchRSSFeeds();
-
-    startNewsCron();
-    startTrendingCron();
-
-    app.listen(PORT, () => {
-      console.log(
-        `Server running on port ${PORT}`
-      );
-    });
-  } catch (error) {
-    console.error(error);
-  }
-};
-
-startServer();
-
 const app = express();
 
 app.use(
@@ -72,3 +49,27 @@ app.get("/", (req, res) => {
 app.use("/api/users", userRoutes);
 app.use("/api/articles", articleRoutes);
 app.use("/api/home", homeRoutes);
+
+const startServer = async () => {
+  try {
+    await connectDB();
+
+    app.listen(PORT, () => {
+      console.log(
+        `Server running on port ${PORT}`
+      );
+    });
+
+    // run these in background
+    fetchNews().catch(console.error);
+    fetchRSSFeeds().catch(console.error);
+
+    startNewsCron();
+    startTrendingCron();
+
+  } catch (error) {
+    console.error(error);
+  }
+};
+
+startServer();
