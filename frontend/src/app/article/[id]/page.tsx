@@ -6,6 +6,7 @@ import api from "@/services/api";
 import ArticleSkeleton from "@/components/ArticleSkeleton";
 import { toast } from "react-hot-toast/headless";
 import RelatedArticles from "@/components/RelatedArticles";
+import ShareButtons from "@/components/ShareButtons";
 const ArticlePage = () => {
     const params = useParams();
     const [article, setArticle] = useState<any>(null);
@@ -99,10 +100,12 @@ const ArticlePage = () => {
             <main className="max-w-4xl mx-auto px-4 sm:px-6 py-10 sm:py-14 md:py-16">
                 {/* ACTION BAR */}
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-10 md:mb-14 border-b border-zinc-800 pb-6 md:pb-8">
-                    <div className="flex items-center gap-4">
-                        <BookmarkButton
-                            articleId={article._id}
-                        />
+                    <div className="flex items-center gap-4 flex-wrap">
+                         <BookmarkButton articleId={article._id} />
+                         <ShareButtons
+                             title={article.title}
+                                url={typeof window !== "undefined" ? window.location.href : ""}
+                    />
                     </div>
 
                     <a
