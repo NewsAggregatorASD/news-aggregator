@@ -118,9 +118,9 @@ const Navbar = () => {
             </div>
           ) : (
             <div className="flex items-center gap-4">
-              <span className="text-sm text-zinc-400">
+              <Link href="/profile" className="text-black bg-zinc-300 px-4 py-2 rounded-xl">
                 {user?.username}
-              </span>
+              </Link>
 
               <button
                 onClick={handleLogout}

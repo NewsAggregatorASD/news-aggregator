@@ -185,3 +185,115 @@ export const getReadingHistory =
       });
     }
   };
+
+export const getDashboard =
+  async (req, res) => {
+    try {
+      const user =
+        await User.findById(
+          req.user._id
+        )
+          .populate(
+            "bookmarkedArticles"
+          )
+          .populate(
+            "readingHistory.article"
+          );
+
+      if (!user) {
+        return res.status(404).json({
+          message: "User not found",
+        });
+      }
+
+      const bookmarks =
+        user.bookmarkedArticles || [];
+
+      const readingHistory =
+        [
+          ...new Map(
+            user.readingHistory
+              .slice(-20)
+              .reverse()
+              .map((item) => [
+                item.article._id.toString(),
+                item.article,
+              ])
+          ).values(),
+        ].slice(0, 10);
+
+      const recommendations =
+        await generateRecommendations(
+          req.user._id
+        );
+
+      const categoryCounts = {};
+
+      user.readingHistory.forEach(
+        (item) => {
+          categoryCounts[item.category] =
+            (categoryCounts[item.category] || 0) + 1;
+        }
+      );
+
+      const favoriteCategory =
+        Object.keys(categoryCounts)
+          .sort(
+            (a, b) =>
+              categoryCounts[b] -
+              categoryCounts[a]
+          )[0] || "None";
+
+      res.json({
+        user,
+        stats: {
+          bookmarks:
+            bookmarks.length,
+
+          articlesRead:
+            readingHistory.length,
+
+          favoriteCategory:
+            favoriteCategory,
+        },
+
+        bookmarks,
+
+        readingHistory,
+
+        recommendations,
+      });
+    } catch (error) {
+      res.status(500).json({
+        message: error.message,
+      });
+    }
+  };
+
+export const updateInterests =
+  async (req, res) => {
+    try {
+      const { interests } = req.body;
+
+      const user =
+        await User.findByIdAndUpdate(
+          req.user._id,
+          {
+            interests,
+          },
+          {
+            new: true,
+          }
+        );
+
+      res.json({
+        interests:
+          user.interests,
+      });
+    } catch (error) {
+      res.status(500).json({
+        message:
+          error.message,
+      });
+    }
+  };

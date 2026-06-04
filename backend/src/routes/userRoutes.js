@@ -9,6 +9,8 @@ import {
   checkBookmarkStatus,
   getRecommendations,
   getReadingHistory,
+  getDashboard,
+  updateInterests,
 } from "../controllers/userController.js";
 
 const router = express.Router();
@@ -49,6 +51,18 @@ router.get(
   "/history",
   protect,
   getReadingHistory
+);
+
+router.get(
+  "/dashboard",
+  protect,
+  getDashboard
+);
+
+router.patch(
+  "/interests",
+  protect,
+  updateInterests
 );
 
 export default router;

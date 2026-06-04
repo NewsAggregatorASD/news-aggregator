@@ -39,7 +39,7 @@ const LoginPage = () => {
             <form onSubmit={handleLogin}
                 className="bg-white p-8 rounded-xl shadow-md w-full max-w-md" >
 
-                <h1 className="text-3xl font-bold mb-6 text-center">Login</h1>
+                <h1 className="text-3xl font-bold mb-6 text-center text-black">Login</h1>
 
                 <input type="email"
                     placeholder="Email"
@@ -57,7 +57,7 @@ const LoginPage = () => {
                 <button type="submit"
                     className="w-full bg-black text-white py-3 rounded-lg">Login</button>
                 <a href="http://localhost:5000/api/auth/google"
-                    className="block text-center mt-4 border py-3 rounded-lg">Continue with Google</a>
+                    className="block text-center mt-4 border py-3 rounded-lg text-black">Continue with Google</a>
             </form >
         </div >
     );

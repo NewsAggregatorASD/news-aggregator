@@ -26,7 +26,7 @@ const RegisterPage = () => {
         <div className="min-h-screen flex items-center justify-center bg-gray-100">
             <form onSubmit={handleRegister}
                 className="bg-white p-8 rounded-xl shadow-md w-full max-w-md">
-                <h1 className="text-3xl font-bold mb-6 text-center">Register</h1>
+                <h1 className="text-3xl font-bold mb-6 text-center text-black">Register</h1>
                 <input type="text" placeholder="Username" value={username}
                     onChange={(e) =>
                         setUsername(e.target.value)
