@@ -48,11 +48,18 @@ export const generateRecommendations =
       const user =
         await User.findById(userId);
 
+      if (!user) {
+        return [];
+      }
+
+      // -------------------------
+      // FALLBACK
+      // -------------------------
+
       if (
-        !user ||
-        user.readingHistory.length === 0
+        user.readingHistory.length === 0 &&
+        user.interests.length === 0
       ) {
-        // fallback trending articles
         return await Article.find()
           .sort({
             trendingScore: -1,
@@ -60,11 +67,17 @@ export const generateRecommendations =
           .limit(20);
       }
 
-      // category frequency map
+      // -------------------------
+      // CATEGORY FREQUENCY
+      // -------------------------
+
       const categoryCount = {};
 
       user.readingHistory.forEach(
         (item) => {
+          if (!item.category)
+            return;
+
           categoryCount[
             item.category
           ] =
@@ -74,38 +87,131 @@ export const generateRecommendations =
         }
       );
 
-      // favorite categories
-      const favoriteCategories =
-        Object.entries(categoryCount)
-          .sort((a, b) => b[1] - a[1])
+      // Top history categories
+      const historyCategories =
+        Object.entries(
+          categoryCount
+        )
+          .sort(
+            (a, b) =>
+              b[1] - a[1]
+          )
           .slice(0, 3)
-          .map((item) => item[0]);
+          .map(
+            (item) => item[0]
+          );
 
-      // articles already viewed
+      // -------------------------
+      // USER INTERESTS
+      // -------------------------
+
+      const interestCategories =
+        user.interests || [];
+
+      // -------------------------
+      // MERGE CATEGORIES
+      // -------------------------
+
+      const recommendationCategories =
+        [
+          ...new Set([
+            ...historyCategories,
+            ...interestCategories,
+          ]),
+        ];
+
+      // -------------------------
+      // EXCLUDE VIEWED ARTICLES
+      // -------------------------
+
       const viewedArticles =
-        user.readingHistory.map(
-          (item) => item.article
-        );
+        user.readingHistory
+          .map((item) =>
+            item.article?.toString()
+          )
+          .filter(Boolean);
 
-      // fetch recommendations
-      const recommendations =
+      // -------------------------
+      // FETCH CANDIDATES
+      // -------------------------
+
+      const candidateArticles =
         await Article.find({
           category: {
-            $in: favoriteCategories,
+            $in: recommendationCategories,
           },
 
           _id: {
             $nin: viewedArticles,
           },
-        })
-          .sort({
-            trendingScore: -1,
-          })
-          .limit(20);
+        }).limit(100);
 
-      return recommendations;
+      // -------------------------
+      // SCORE ARTICLES
+      // -------------------------
+
+      const scoredArticles =
+        candidateArticles.map(
+          (article) => {
+            let score =
+              article.trendingScore ||
+              0;
+
+            // Reading history weight
+            score +=
+              categoryCount[
+                article.category
+              ] || 0;
+
+            // Extra bonus if category
+            // is one of top history categories
+            if (
+              historyCategories.includes(
+                article.category
+              )
+            ) {
+              score += 15;
+            }
+
+            // Explicit interests
+            if (
+              interestCategories.includes(
+                article.category
+              )
+            ) {
+              score += 5;
+            }
+
+            return {
+              article,
+              score,
+            };
+          }
+        );
+
+      // -------------------------
+      // SORT
+      // -------------------------
+
+      scoredArticles.sort(
+        (a, b) =>
+          b.score - a.score
+      );
+
+      // -------------------------
+      // RETURN TOP RESULTS
+      // -------------------------
+
+      return scoredArticles
+        .slice(0, 20)
+        .map(
+          (item) => item.article
+        );
     } catch (error) {
-      console.error(error.message);
+      console.error(
+        "Recommendation Error:",
+        error
+      );
 
       return [];
     }

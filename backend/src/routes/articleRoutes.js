@@ -6,6 +6,8 @@ import {
   getArticlesByCategory,
   getTrendingArticles,
   searchArticles,
+  getSources,
+  getSearchSuggestions,
 } from "../controllers/articleController.js";
 
 import optionalAuth from "../middleware/optionalAuth.js";
@@ -27,6 +29,16 @@ router.get(
 router.get(
   "/search",
   searchArticles
+);
+
+router.get(
+  "/sources",
+  getSources
+);
+
+router.get(
+  "/suggestions",
+  getSearchSuggestions
 );
 
 router.get(

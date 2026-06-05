@@ -160,23 +160,24 @@ export const searchArticles = async (
             q,
             category,
             source,
+            sort,
         } = req.query;
 
         const query = {};
 
-        // text search
+        // TEXT SEARCH
         if (q) {
             query.$text = {
                 $search: q,
             };
         }
 
-        // category filter
+        // CATEGORY FILTER
         if (category) {
             query.category = category;
         }
 
-        // source filter
+        // SOURCE FILTER
         if (source) {
             query.source = source;
         }
@@ -187,6 +188,35 @@ export const searchArticles = async (
         const limit = 20;
 
         const skip = (page - 1) * limit;
+
+        let sortQuery = {};
+
+        // SORTING
+        switch (sort) {
+            case "latest":
+                sortQuery = {
+                    publishedAt: -1,
+                };
+                break;
+
+            case "trending":
+                sortQuery = {
+                    trendingScore: -1,
+                };
+                break;
+
+            case "relevant":
+            default:
+                sortQuery = q
+                    ? {
+                        score: {
+                            $meta: "textScore",
+                        },
+                    }
+                    : {
+                        publishedAt: -1,
+                    };
+        }
 
         const articles =
             await Article.find(
@@ -199,24 +229,84 @@ export const searchArticles = async (
                     }
                     : {}
             )
-                .sort(
-                    q
-                        ? {
-                            score: {
-                                $meta: "textScore",
-                            },
-                        }
-                        : {
-                            publishedAt: -1,
-                        }
-                )
+                .sort(sortQuery)
                 .skip(skip)
                 .limit(limit);
 
-        res.json(articles);
+        const total =
+            await Article.countDocuments(
+                query
+            );
+
+        res.json({
+            articles,
+
+            pagination: {
+                page,
+                limit,
+                total,
+                pages: Math.ceil(
+                    total / limit
+                ),
+            },
+        });
     } catch (error) {
         res.status(500).json({
-            message: error.message,
+            message:
+                error.message,
         });
     }
 };
+
+export const getSources =
+    async (req, res) => {
+        try {
+            const sources =
+                await Article.distinct(
+                    "source"
+                );
+
+            res.json(sources);
+        } catch (error) {
+            res.status(500).json({
+                message:
+                    error.message,
+            });
+        }
+    };
+
+export const getSearchSuggestions =
+  async (req, res) => {
+    try {
+      const { q } = req.query;
+
+      if (!q || q.length < 2) {
+        return res.json([]);
+      }
+
+      const articles =
+        await Article.find({
+          title: {
+            $regex: q,
+            $options: "i",
+          },
+        })
+          .select("title")
+          .limit(10);
+
+      const suggestions = [
+        ...new Set(
+          articles.map(
+            (article) =>
+              article.title
+          )
+        ),
+      ];
+
+      res.json(suggestions);
+    } catch (error) {
+      res.status(500).json({
+        message: error.message,
+      });
+    }
+  };
