@@ -91,13 +91,19 @@ const Navbar = () => {
           </Link>
 
           {isLoggedIn && (
-            <Link
-              href="/bookmarks"
-              className="flex items-center gap-2 text-zinc-300 hover:text-white transition-colors"
-            >
-              <Bookmark className="w-4 h-4" />
-              Bookmarks
-            </Link>
+            <>
+              <Link
+                href="/bookmarks"
+                className="flex items-center gap-2 text-zinc-300 hover:text-white transition-colors"
+              >
+                <Bookmark className="w-4 h-4" />
+                Bookmarks
+              </Link>
+
+              <Link href="/dashboard" className="flex items-center gap-1.5 text-zinc-400 hover:text-white transition-colors text-sm">
+                Dashboard
+              </Link>
+            </>
           )}
 
           {!isLoggedIn ? (
