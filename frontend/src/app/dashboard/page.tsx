@@ -6,7 +6,8 @@ import { useAuth } from "@/context/AuthContext";
 import Navbar from "@/components/Navbar";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import Link from "next/link";
-import { BookMarked, Clock, Star, User } from "lucide-react";
+import { BookMarked, Clock, Star, User, Mail } from "lucide-react";
+import toast from "react-hot-toast";
 
 const DashboardPage = () => {
   const { user } = useAuth();
@@ -16,17 +17,23 @@ const DashboardPage = () => {
   const [history, setHistory] = useState<any[]>([]);
   const [bookmarks, setBookmarks] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [digestSubscribed, setDigestSubscribed] = useState(true);
+  const [digestLoading, setDigestLoading] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // run both API calls at the same time
-        const [historyRes, bookmarksRes] = await Promise.all([
+        const [historyRes, bookmarksRes, dashboardRes] = await Promise.all([
           api.get("/users/history"),
           api.get("/users/bookmarks"),
+          api.get("/users/dashboard"),
         ]);
-        setHistory(historyRes.data.slice(0, 5));      // last 5 read
-        setBookmarks(bookmarksRes.data.slice(0, 4));  // last 4 bookmarks
+        setHistory(historyRes.data.slice(0, 5));
+        setBookmarks(bookmarksRes.data.slice(0, 4));
+        // get digestSubscribed from dashboard API
+        setDigestSubscribed(
+          dashboardRes.data.stats?.digestSubscribed ?? true
+        );
       } catch (error) {
         console.error(error);
       } finally {
@@ -36,14 +43,32 @@ const DashboardPage = () => {
     fetchData();
   }, []);
 
-  // count how many articles per category in reading history
+  // toggle digest subscription
+  const handleDigestToggle = async () => {
+    try {
+      setDigestLoading(true);
+      if (digestSubscribed) {
+        await api.patch("/users/digest/unsubscribe");
+        setDigestSubscribed(false);
+        toast.success("Unsubscribed from weekly digest");
+      } else {
+        await api.patch("/users/digest/subscribe");
+        setDigestSubscribed(true);
+        toast.success("Subscribed to weekly digest ✅");
+      }
+    } catch (error) {
+      toast.error("Failed to update preference");
+    } finally {
+      setDigestLoading(false);
+    }
+  };
+
   const categoryCount = history.reduce((acc: any, item: any) => {
     const cat = item.category || "general";
     acc[cat] = (acc[cat] || 0) + 1;
     return acc;
   }, {});
 
-  // sort categories by count → top interests
   const topInterests = Object.entries(categoryCount)
     .sort((a: any, b: any) => b[1] - a[1])
     .slice(0, 4);
@@ -68,7 +93,7 @@ const DashboardPage = () => {
           ) : (
             <>
               {/* STATS ROW */}
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-10">
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
 
                 <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5">
                   <User className="w-5 h-5 text-blue-400 mb-3" />
@@ -98,10 +123,47 @@ const DashboardPage = () => {
 
               </div>
 
+              {/* DIGEST TOGGLE CARD — full width */}
+              <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5 mb-10">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <Mail className="w-5 h-5 text-blue-400" />
+                    <div>
+                      <p className="text-white font-semibold">Weekly Email Digest</p>
+                      <p className="text-zinc-500 text-sm">
+                        Top 5 trending articles every Monday at 8AM
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* TOGGLE BUTTON */}
+                  <button
+                    onClick={handleDigestToggle}
+                    disabled={digestLoading}
+                    className={`relative w-12 h-6 rounded-full transition-colors duration-300 disabled:opacity-50 ${
+                      digestSubscribed ? "bg-blue-600" : "bg-zinc-700"
+                    }`}
+                  >
+                    <span
+                      className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-all duration-300 ${
+                        digestSubscribed ? "left-7" : "left-1"
+                      }`}
+                    />
+                  </button>
+                </div>
+
+                {/* STATUS TEXT */}
+                <p className={`text-xs mt-3 ${digestSubscribed ? "text-green-400" : "text-zinc-500"}`}>
+                  {digestSubscribed
+                    ? "✓ You're subscribed — emails sent every Monday"
+                    : "✗ Unsubscribed — you won't receive digest emails"}
+                </p>
+              </div>
+
               {/* MAIN GRID */}
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
-                {/* READING HISTORY — takes 2 columns */}
+                {/* READING HISTORY */}
                 <div className="lg:col-span-2 bg-zinc-900 border border-zinc-800 rounded-2xl p-6">
                   <div className="flex items-center justify-between mb-5">
                     <h2 className="text-lg font-bold">Recent Reading</h2>
@@ -120,7 +182,6 @@ const DashboardPage = () => {
                           href={`/article/${item.article?._id}`}
                           className="flex items-center gap-4 p-3 rounded-xl hover:bg-zinc-800 transition-colors group"
                         >
-                          {/* article image */}
                           {item.article?.imageUrl ? (
                             <img
                               src={item.article.imageUrl}
@@ -130,7 +191,6 @@ const DashboardPage = () => {
                           ) : (
                             <div className="w-14 h-14 rounded-lg bg-zinc-700 shrink-0" />
                           )}
-
                           <div className="flex-1 min-w-0">
                             <p className="text-white text-sm font-medium line-clamp-2 group-hover:text-blue-400 transition-colors">
                               {item.article?.title}
@@ -151,7 +211,6 @@ const DashboardPage = () => {
                   {/* TOP INTERESTS */}
                   <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6">
                     <h2 className="text-lg font-bold mb-4">Top Interests</h2>
-
                     {topInterests.length === 0 ? (
                       <p className="text-zinc-500 text-sm">Read more articles to see your interests</p>
                     ) : (
