@@ -29,8 +29,9 @@ const LoginPage = () => {
 
             router.push("/home");
         }
-        catch (error) {
-            toast.error("Login failed");
+        catch (error: unknown) {
+            const message = error instanceof Error ? error.message : (error as any)?.response?.data?.message || "Login failed";
+            toast.error(message);
         }
     };
 
@@ -56,7 +57,7 @@ const LoginPage = () => {
                 />
                 <button type="submit"
                     className="w-full bg-black text-white py-3 rounded-lg">Login</button>
-                <a href="http://localhost:5000/api/auth/google"
+                <a href={`${process.env.NEXT_PUBLIC_API_URL}/auth/google`}
                     className="block text-center mt-4 border py-3 rounded-lg text-black">Continue with Google</a>
             </form >
         </div >

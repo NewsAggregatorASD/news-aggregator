@@ -80,9 +80,7 @@ router.get(
     );
 
     // redirect frontend
-    res.redirect(
-      `http://localhost:3000/oauth-success?token=${accessToken}`
-    );
+    res.redirect(`${process.env.FRONTEND_URL}/oauth-success?token=${accessToken}`);
   }
 );
 
