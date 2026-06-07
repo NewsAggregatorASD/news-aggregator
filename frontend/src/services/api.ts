@@ -16,4 +16,28 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+api.interceptors.request.use(
+  (config) => {
+    console.log(
+      "REQUEST:",
+      config.url
+    );
+
+    return config;
+  }
+);
+
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    console.log(
+      "FAILED:",
+      error.config?.url,
+      error.response?.status
+    );
+
+    return Promise.reject(error);
+  }
+);
+
 export default api;
