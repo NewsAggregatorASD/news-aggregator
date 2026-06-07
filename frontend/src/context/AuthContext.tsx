@@ -39,9 +39,9 @@ const AuthContext =
 
     loading: true,
 
-    setIsLoggedIn: () => {},
+    setIsLoggedIn: () => { },
 
-    setUser: () => {},
+    setUser: () => { },
   });
 
 export const AuthProvider = ({
@@ -67,6 +67,13 @@ export const AuthProvider = ({
               "accessToken"
             );
 
+            console.log(
+            "Stored token:",
+            localStorage.getItem(
+              "accessToken"
+            )
+          );
+
           if (!token) {
             setLoading(false);
 
@@ -82,7 +89,17 @@ export const AuthProvider = ({
           setUser(response.data);
 
           setIsLoggedIn(true);
-        } catch (error) {
+        } catch (error: any) {
+          console.log(
+            "Failed URL:",
+            error.config?.url
+          );
+
+          console.log(
+            "Status:",
+            error.response?.status
+          );
+
           console.error(error);
 
           localStorage.removeItem(
@@ -90,7 +107,6 @@ export const AuthProvider = ({
           );
 
           setUser(null);
-
           setIsLoggedIn(false);
         } finally {
           setLoading(false);
