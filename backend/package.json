@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "nodemon src/server.js",
     "start": "node src/server.js"
-},
+  },
   "dependencies": {
     "@extractus/article-extractor": "^8.1.0",
     "axios": "^1.16.1",
@@ -23,6 +23,7 @@
     "nodemailer": "^8.0.7",
     "passport": "^0.7.0",
     "passport-google-oauth20": "^2.0.0",
+    "resend": "^6.12.4",
     "rss-parser": "^3.13.0"
   },
   "devDependencies": {
