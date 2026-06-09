@@ -10,6 +10,9 @@ import validateEmail from "../utils/validateEmail.js";
 
 // REGISTER
 export const registerUser = async (req, res) => {
+  console.log(
+  "REGISTER ROUTE HIT"
+);
   try {
     const { username, email, password } = req.body;
 
@@ -56,7 +59,7 @@ export const registerUser = async (req, res) => {
     try {
       await sendEmail(user.email, "Verify Your Account", verificationEmailHtml);
     } catch (emailError) {
-      console.error("Verification email failed:", emailError.message);
+      console.error("Verification email failed:", emailError);
     }
 
     res.status(201).json({
