@@ -84,11 +84,8 @@ const LoginPage = () => {
         </form>
 
         <div className="flex items-center justify-between mt-6">
-          <Link href="/register" className="text-blue-400 hover:underline text-sm">
+          <Link href="/register" className="text-blue-400 hover:underline text-sm mx-auto">
             Create account
-          </Link>
-          <Link href="/forgot-password" className="text-zinc-500 hover:text-white text-sm">
-            Forgot password?
           </Link>
         </div>
 

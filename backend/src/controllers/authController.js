@@ -41,6 +41,8 @@ export const registerUser = async (req, res) => {
       digestSubscribed: true,
     });
 
+    /*
+
     const verificationUrl = `${process.env.FRONTEND_URL}/verify-email/${verificationToken}`;
 
     const verificationEmailHtml = `
@@ -61,13 +63,14 @@ export const registerUser = async (req, res) => {
     } catch (emailError) {
       console.error("Verification email failed:", emailError);
     }
+      */
 
     res.status(201).json({
       _id: user._id,
       username: user.username,
       email: user.email,
       token: generateToken(user._id),
-      message: "Registration successful. Please verify your email.",
+      message: "Registration successful.",
     });
 
   } catch (error) {
