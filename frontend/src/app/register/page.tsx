@@ -17,7 +17,7 @@ const RegisterPage = () => {
     try {
       setLoading(true);
       await api.post("/auth/register", { username, email, password });
-      toast.success("Registered! Please check your email to verify.");
+      toast.success("Registered! Please log in.");
       router.push("/login");
     } catch (error: any) {
       // correctly reads backend error message
