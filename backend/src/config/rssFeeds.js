@@ -40,6 +40,27 @@ const rssFeeds = [
 
     url: "https://www.theverge.com/rss/index.xml",
   },
+
+  {
+    source: "Times of India",
+    category: "general",
+
+    url: "https://timesofindia.indiatimes.com/rssfeedstopstories.cms",
+  },
+
+  {
+    source: "The Hindu",
+    category: "general",
+
+    url: "https://www.thehindu.com/news/national/feeder/default.rss",
+  },
+
+  {
+    source: "NDTV",
+    category: "general",
+
+    url: "https://feeds.feedburner.com/ndtvnews-top-stories",
+  },
 ];
 
 export default rssFeeds;
